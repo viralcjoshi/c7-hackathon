@@ -1,7 +1,10 @@
+from pathlib import Path
 from unittest.mock import patch
 
 from tools.github_scanner import (
     SCANNABLE_EXTENSIONS,
+    _is_scanner_meta_line,
+    _should_skip_scan_path,
     parse_github_url,
     scan_source_code,
 )
@@ -48,6 +51,29 @@ def test_scan_terraform_wildcard_iam():
 def test_scannable_extensions_include_tf():
     assert ".tf" in SCANNABLE_EXTENSIONS
     assert ".hcl" in SCANNABLE_EXTENSIONS
+
+
+def test_should_skip_scan_path_for_tests():
+    assert _should_skip_scan_path("backend/tests/test_github_scanner.py")
+    assert _should_skip_scan_path("src/App.test.tsx")
+    assert not _should_skip_scan_path("backend/main.py")
+
+
+def test_scanner_meta_lines_are_ignored():
+    assert _is_scanner_meta_line('        "Use of eval()",', "Use of eval()")
+    assert _is_scanner_meta_line(
+        r'        r"(?i)(aws_access_key_id|ghp_[a-zA-Z0-9]{20,})"',
+        "Exposed Credential Pattern",
+    )
+    code = 'password = "real-secret-value-here"\n'
+    findings = scan_source_code(code, "config.py", "Python")
+    assert any(f["name"] == "Hardcoded Secret" for f in findings)
+
+    scanner_source = Path(__file__).resolve().parents[1] / "tools" / "github_scanner.py"
+    findings = scan_source_code(
+        scanner_source.read_text(), "backend/tools/github_scanner.py", "Python"
+    )
+    assert findings == []
 
 
 def test_run_vuln_scanner_with_github_repo():

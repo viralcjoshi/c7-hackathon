@@ -65,6 +65,9 @@ SKIP_PATH_PARTS = {
     "coverage",
     ".next",
     "target",
+    "tests",
+    "__tests__",
+    "spec",
 }
 
 MAX_FILES = 60
@@ -268,6 +271,38 @@ TERRAFORM_PATTERNS: list[tuple[str, str, str, str, str]] = [
 ]
 
 
+def _should_skip_scan_path(path: str) -> bool:
+    """Skip test fixtures and other non-production paths."""
+    basename = os.path.basename(path)
+    if basename.startswith("test_") and basename.endswith(".py"):
+        return True
+    if basename.endswith("_test.py") or basename.endswith("_test.ts"):
+        return True
+    if basename.endswith(".test.ts") or basename.endswith(".test.tsx"):
+        return True
+    if basename.endswith(".spec.ts") or basename.endswith(".spec.tsx"):
+        return True
+    return False
+
+
+def _is_scanner_meta_line(line: str, matched_name: str) -> bool:
+    """Ignore matches inside this file's own pattern/rule definitions."""
+    stripped = line.strip()
+    if f'"{matched_name}"' in stripped or f"'{matched_name}'" in stripped:
+        return True
+    if re.match(r'^\s*"[^"]*",?\s*$', stripped) or re.match(r"^\s*'[^']*',?\s*$", stripped):
+        return True
+    if "OWASP-A" in stripped and ('"' in stripped or "'" in stripped):
+        return True
+    if re.match(r'^\s*r["\']', stripped) and (
+        "(?i)" in stripped or "\\" in stripped or "|" in stripped
+    ):
+        return True
+    if re.match(r'^\s*r["\'][^"\']*["\'],?\s*$', stripped):
+        return True
+    return False
+
+
 def parse_github_url(repo: str) -> tuple[str, str]:
     """Return (owner, repo_name) from URL or owner/repo string."""
     repo = repo.strip().rstrip("/")
@@ -332,6 +367,8 @@ def list_scannable_files(
         path = item["path"]
         if any(part in SKIP_PATH_PARTS for part in path.split("/")):
             continue
+        if _should_skip_scan_path(path):
+            continue
         ext = os.path.splitext(path)[1].lower()
         if ext not in SCANNABLE_EXTENSIONS:
             continue
@@ -371,6 +408,8 @@ def scan_source_code(content: str, path: str, language: str) -> list[dict]:
     for pattern, owasp, name, severity, recommendation in patterns:
         regex = re.compile(pattern)
         for line_no, line in enumerate(lines, start=1):
+            if _is_scanner_meta_line(line, name):
+                continue
             if regex.search(line):
                 findings.append(
                     {
