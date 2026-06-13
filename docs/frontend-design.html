@@ -1,5 +1,5 @@
 <h2>Frontend Design — Analytics Dashboard</h2>
-<p class="subtitle">React + Vite + TailwindCSS · Dark theme · Real-time SSE updates</p>
+<p class="subtitle">React + Vite + TailwindCSS · Dark theme · Real-time SSE · GitHub repo scanning</p>
 
 <div style="background:#0d1117;border-radius:10px;padding:16px;font-size:11px;font-family:sans-serif">
 
@@ -7,73 +7,70 @@
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #1f2937">
     <div style="color:#60a5fa;font-weight:bold;font-size:14px">🛡️ CyberSentinel AI</div>
     <div style="display:flex;gap:8px">
-      <div style="background:#1f2937;border-radius:6px;padding:6px 12px;color:#9ca3af">Dashboard</div>
-      <div style="background:#1f3a5f;border-radius:6px;padding:6px 12px;color:#60a5fa">Reports</div>
-      <div style="background:#1f2937;border-radius:6px;padding:6px 12px;color:#9ca3af">Settings</div>
+      <div style="background:#1f3a5f;border-radius:6px;padding:6px 12px;color:#60a5fa">Dashboard</div>
+      <div style="background:#1f2937;border-radius:6px;padding:6px 12px;color:#9ca3af">Evals</div>
     </div>
   </div>
 
   <!-- Log source selector -->
   <div style="background:#111827;border-radius:8px;padding:12px;margin-bottom:16px;border:1px solid #1f2937">
-    <div style="color:#9ca3af;font-size:10px;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px">Log Source</div>
+    <div style="color:#9ca3af;font-size:10px;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px">Analysis Source</div>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-      <div style="background:#1f3a5f;border:1px solid #3b82f6;border-radius:6px;padding:6px 14px;color:#60a5fa">⚡ Synthetic Demo</div>
-      <div style="background:#1f2937;border-radius:6px;padding:6px 14px;color:#6b7280">🖥️ System Logs</div>
-      <div style="background:#1f2937;border-radius:6px;padding:6px 14px;color:#6b7280">📁 Upload File</div>
+      <div style="background:#1f3a5f;border:1px solid #3b82f6;border-radius:6px;padding:6px 14px;color:#60a5fa">⚡ Synthetic</div>
+      <div style="background:#1f2937;border-radius:6px;padding:6px 14px;color:#6b7280">🖥️ System</div>
+      <div style="background:#1f2937;border-radius:6px;padding:6px 14px;color:#6b7280">📁 Upload</div>
+      <div style="background:#1f2937;border-radius:6px;padding:6px 14px;color:#6b7280">🐙 GitHub Repo</div>
       <div style="margin-left:auto;background:#dc2626;border-radius:6px;padding:6px 16px;color:#fff;font-weight:bold">▶ Run Analysis</div>
     </div>
   </div>
 
   <!-- Metric cards -->
   <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
-    <div style="background:#1a0a0a;border:1px solid #7f1d1d;border-radius:8px;padding:12px;flex:1;min-width:100px">
-      <div style="color:#ef4444;font-size:22px;font-weight:bold">3</div>
+    <div style="background:#1a0a0a;border:1px solid #7f1d1d;border-radius:8px;padding:12px;flex:1;min-width:90px">
+      <div style="color:#ef4444;font-size:22px;font-weight:bold">1</div>
       <div style="color:#9ca3af;font-size:10px">Critical Threats</div>
     </div>
-    <div style="background:#1a140a;border:1px solid #78350f;border-radius:8px;padding:12px;flex:1;min-width:100px">
-      <div style="color:#f59e0b;font-size:22px;font-weight:bold">12</div>
+    <div style="background:#1a140a;border:1px solid #78350f;border-radius:8px;padding:12px;flex:1;min-width:90px">
+      <div style="color:#f59e0b;font-size:22px;font-weight:bold">3</div>
       <div style="color:#9ca3af;font-size:10px">Warnings</div>
     </div>
-    <div style="background:#0a1a0a;border:1px solid #14532d;border-radius:8px;padding:12px;flex:1;min-width:100px">
+    <div style="background:#0a1a0a;border:1px solid #14532d;border-radius:8px;padding:12px;flex:1;min-width:90px">
       <div style="color:#22c55e;font-size:22px;font-weight:bold">5/5</div>
       <div style="color:#9ca3af;font-size:10px">Agents Active</div>
     </div>
-    <div style="background:#0a0a1a;border:1px solid #1e3a5f;border-radius:8px;padding:12px;flex:1;min-width:100px">
+    <div style="background:#0a0a1a;border:1px solid #1e3a5f;border-radius:8px;padding:12px;flex:1;min-width:90px">
       <div style="color:#60a5fa;font-size:22px;font-weight:bold">72%</div>
       <div style="color:#9ca3af;font-size:10px">Compliance Score</div>
     </div>
-    <div style="background:#0f0a1a;border:1px solid #3b1f6e;border-radius:8px;padding:12px;flex:1;min-width:100px">
+    <div style="background:#0f0a1a;border:1px solid #3b1f6e;border-radius:8px;padding:12px;flex:1;min-width:90px">
       <div style="color:#8b5cf6;font-size:22px;font-weight:bold">HIGH</div>
       <div style="color:#9ca3af;font-size:10px">Risk Level</div>
     </div>
   </div>
 
-  <!-- Two column: agent feed + incident report -->
-  <div style="display:flex;gap:12px">
+  <!-- Two column: agent pipeline + incident report -->
+  <div style="display:flex;gap:12px;margin-bottom:16px">
 
-    <!-- Agent activity feed -->
+    <!-- Agent pipeline -->
     <div style="flex:1;background:#111827;border-radius:8px;padding:12px;border:1px solid #1f2937">
-      <div style="color:#9ca3af;font-size:10px;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Agent Activity</div>
-      <div style="display:flex;flex-direction:column;gap:6px">
-        <div style="display:flex;gap:8px;align-items:flex-start">
-          <span style="color:#22c55e">●</span>
-          <div><span style="color:#22c55e">LogMonitor</span><span style="color:#6b7280"> — detected 3 SSH brute force attempts from 192.168.1.42</span></div>
+      <div style="color:#9ca3af;font-size:10px;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Agent Pipeline</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div style="border:2px solid #22c55e;background:#052e16;border-radius:8px;padding:8px;font-size:10px">
+          <div style="color:#f3f4f6;font-weight:bold">LogMonitor</div>
+          <div style="color:#22c55e;margin-top:4px">● Complete</div>
         </div>
-        <div style="display:flex;gap:8px;align-items:flex-start">
-          <span style="color:#ef4444">●</span>
-          <div><span style="color:#ef4444">ThreatIntel</span><span style="color:#6b7280"> — matched CVE-2024-1234 (CVSS 9.1), IP flagged in AbuseIPDB</span></div>
+        <div style="border:2px solid #22c55e;background:#052e16;border-radius:8px;padding:8px;font-size:10px">
+          <div style="color:#f3f4f6;font-weight:bold">ThreatIntel</div>
+          <div style="color:#22c55e;margin-top:4px">● Complete</div>
         </div>
-        <div style="display:flex;gap:8px;align-items:flex-start">
-          <span style="color:#8b5cf6">●</span>
-          <div><span style="color:#8b5cf6">VulnScanner</span><span style="color:#6b7280"> — missing X-Frame-Options header, outdated nginx:1.18 image</span></div>
+        <div style="border:2px solid #3b82f6;background:#172554;border-radius:8px;padding:8px;font-size:10px;box-shadow:0 0 12px rgba(59,130,246,0.4)">
+          <div style="color:#f3f4f6;font-weight:bold">VulnScanner</div>
+          <div style="color:#60a5fa;margin-top:4px">● Running</div>
+          <div style="height:3px;background:#1e3a8a;border-radius:2px;margin-top:6px;overflow:hidden"><div style="width:40%;height:100%;background:#60a5fa"></div></div>
         </div>
-        <div style="display:flex;gap:8px;align-items:flex-start">
-          <span style="color:#f59e0b">●</span>
-          <div><span style="color:#f59e0b">IncidentResponse</span><span style="color:#6b7280"> — generated 5-step remediation runbook</span></div>
-        </div>
-        <div style="display:flex;gap:8px;align-items:flex-start">
-          <span style="color:#06b6d4">●</span>
-          <div><span style="color:#06b6d4">PolicyChecker</span><span style="color:#6b7280"> — 4 NIST CSF gaps, 2 SOC2 control failures</span></div>
+        <div style="border:2px solid #374151;background:#030712;border-radius:8px;padding:8px;font-size:10px">
+          <div style="color:#f3f4f6;font-weight:bold">IncidentResponse</div>
+          <div style="color:#6b7280;margin-top:4px">● Pending</div>
         </div>
       </div>
     </div>
@@ -85,19 +82,38 @@
         <div style="background:#1f3a5f;border-radius:4px;padding:3px 8px;color:#60a5fa;font-size:10px">⬇ Download</div>
       </div>
       <div style="color:#f59e0b;font-weight:bold;margin-bottom:8px">🚨 Action Plan</div>
-      <div style="display:flex;flex-direction:column;gap:5px;color:#d1d5db">
+      <div style="display:flex;flex-direction:column;gap:5px;color:#d1d5db;font-size:11px">
         <div>1. Block IP 192.168.1.42 at firewall immediately</div>
-        <div>2. Rotate SSH keys for all users on affected host</div>
-        <div>3. Enable 2FA for all privileged accounts</div>
-        <div>4. Update nginx to 1.25+ to patch CVE-2024-1234</div>
-        <div>5. Add X-Frame-Options header to nginx config</div>
+        <div>2. Enable fail2ban and require SSH key authentication</div>
       </div>
       <div style="margin-top:10px;padding-top:10px;border-top:1px solid #1f2937">
         <div style="color:#06b6d4;font-weight:bold;margin-bottom:6px">📜 Compliance Gaps</div>
-        <div style="color:#6b7280">NIST ID.AM-2 · PR.AC-1 · DE.CM-1</div>
-        <div style="color:#6b7280">SOC2 CC6.1 · CC7.2</div>
+        <div style="color:#6b7280;font-size:10px">NIST PR.AC-1 · SOC2 CC6.1</div>
       </div>
     </div>
-
   </div>
+
+  <!-- Threats & remediation panel -->
+  <div style="background:#111827;border-radius:8px;padding:12px;border:1px solid #1f2937">
+    <div style="color:#9ca3af;font-size:10px;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Detected Threats &amp; Remediation</div>
+    <div style="border:1px solid #7f1d1d;background:#1a0a0a;border-radius:8px;padding:10px;margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+        <span style="color:#f3f4f6;font-weight:bold">SSH Brute Force Attack</span>
+        <span style="color:#ef4444;font-size:10px;font-weight:bold">CRITICAL</span>
+      </div>
+      <div style="color:#6b7280;font-size:10px;margin-bottom:6px">Source IP: 192.168.1.42 · 5 failed attempts</div>
+      <div style="color:#d1d5db;font-size:11px"><span style="color:#22c55e;font-weight:bold">Fix: </span>Block the attacking IP, enable fail2ban, disable root SSH login</div>
+    </div>
+    <div style="border:1px solid #78350f;background:#1a140a;border-radius:8px;padding:10px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+        <span style="color:#f3f4f6;font-weight:bold">Open Ingress CIDR (0.0.0.0/0)</span>
+        <span style="color:#ef4444;font-size:10px;font-weight:bold">CRITICAL</span>
+      </div>
+      <div style="color:#6b7280;font-size:10px;font-family:monospace;margin-bottom:6px">main.tf:42 · HCL · OWASP-A01</div>
+      <div style="color:#d1d5db;font-size:11px"><span style="color:#22c55e;font-weight:bold">Fix: </span>Replace 0.0.0.0/0 with least-privilege CIDR blocks</div>
+    </div>
+  </div>
+
 </div>
+
+<p style="color:#6b7280;font-size:12px;margin-top:12px">GitHub runs swap metric cards (Files Scanned, Primary Language) and show code findings in the same Threats panel. See <code>frontend/README.md</code>.</p>

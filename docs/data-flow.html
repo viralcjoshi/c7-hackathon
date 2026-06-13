@@ -7,9 +7,9 @@
   <div style="display:flex;gap:12px;margin-bottom:8px;align-items:flex-start">
     <div style="background:#1f3a5f;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;color:#60a5fa;font-weight:bold;flex-shrink:0">1</div>
     <div style="background:#0d1117;border:1px solid #1f2937;border-radius:8px;padding:10px;flex:1">
-      <div style="color:#60a5fa;font-weight:bold;margin-bottom:4px">User selects log source in Dashboard</div>
-      <div style="color:#6b7280">Synthetic demo · Local /var/log · Upload .log file</div>
-      <div style="color:#374151;margin-top:4px">POST /analyze  { source: "synthetic" | "system" | "upload", file?: bytes }</div>
+      <div style="color:#60a5fa;font-weight:bold;margin-bottom:4px">User selects analysis source in Dashboard</div>
+      <div style="color:#6b7280">Synthetic · System logs · Upload · GitHub repo URL</div>
+      <div style="color:#374151;margin-top:4px">POST /analyze · POST /analyze/upload · POST /analyze/github</div>
     </div>
   </div>
   <div style="margin-left:12px;color:#374151;margin-bottom:8px">↓</div>
@@ -52,8 +52,8 @@
     <div style="background:#1f3a5f;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;color:#60a5fa;font-weight:bold;flex-shrink:0">5</div>
     <div style="background:#0d1117;border:1px solid #8b5cf6;border-radius:8px;padding:10px;flex:1">
       <div style="color:#8b5cf6;font-weight:bold;margin-bottom:4px">🛡️ Vuln Scanner Agent runs</div>
-      <div style="color:#6b7280">Checks OWASP patterns, missing headers, Docker image age</div>
-      <div style="color:#374151;margin-top:4px">Emits SSE: { agent: "vuln_scanner", vulnerabilities: [...], risk_level: "low|medium|high|critical" }</div>
+      <div style="color:#6b7280">OWASP mapping · HTTP headers (log runs) · GitHub static scan (Terraform/IaC patterns)</div>
+      <div style="color:#374151;margin-top:4px">Emits SSE: { agent: "vuln_scanner", status: "done" } → code_findings[], risk_level</div>
     </div>
   </div>
   <div style="margin-left:12px;color:#374151;margin-bottom:8px">↓  state.vulnerabilities populated</div>
@@ -63,8 +63,8 @@
     <div style="background:#1f3a5f;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;color:#60a5fa;font-weight:bold;flex-shrink:0">6</div>
     <div style="background:#0d1117;border:1px solid #f59e0b;border-radius:8px;padding:10px;flex:1">
       <div style="color:#f59e0b;font-weight:bold;margin-bottom:4px">🚨 Incident Response Agent runs</div>
-      <div style="color:#6b7280">Reads ALL prior findings → GPT-4o generates prioritized action plan + markdown runbook</div>
-      <div style="color:#374151;margin-top:4px">Emits SSE: { agent: "incident_response", action_plan: [...], runbook_md: "..." }</div>
+      <div style="color:#6b7280">OpenRouter gpt-4o via CachingLLMClient (LRU cache) · fallback action plan if LLM unavailable</div>
+      <div style="color:#374151;margin-top:4px">Emits SSE: { agent: "incident_response", status: "done" } → action_plan[], runbook_md</div>
     </div>
   </div>
   <div style="margin-left:12px;color:#374151;margin-bottom:8px">↓  state.action_plan + runbook populated</div>
@@ -85,8 +85,8 @@
     <div style="background:#1f3a5f;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;color:#60a5fa;font-weight:bold;flex-shrink:0">8</div>
     <div style="background:#0d1117;border:1px solid #3b82f6;border-radius:8px;padding:10px;flex:1">
       <div style="color:#3b82f6;font-weight:bold;margin-bottom:4px">Dashboard renders final report</div>
-      <div style="color:#6b7280">All metrics cards update · Agent feed complete · Incident report + compliance report available for download</div>
-      <div style="color:#374151;margin-top:4px">GET /report/{session_id} → full JSON report</div>
+      <div style="color:#6b7280">Metrics · Agent pipeline boxes · Threats &amp; Remediation panel · Incident report · Evals tab</div>
+      <div style="color:#374151;margin-top:4px">GET /report/{session_id} · GET /evals/{session_id}</div>
     </div>
   </div>
 

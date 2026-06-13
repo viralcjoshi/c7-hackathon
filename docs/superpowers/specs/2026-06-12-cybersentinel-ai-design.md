@@ -32,12 +32,12 @@ Secondary goal: demonstrate measurable cost and latency savings from LLM respons
 ```
 ┌─────────────────────────────────────────────────────┐
 │         React Dashboard (Vite + TailwindCSS)         │
-│  Metrics · Agent Feed · Log Selector · Reports       │
+│  Metrics · Agent Pipeline · Threats & Remediation · Evals │
 └──────────────────────┬──────────────────────────────┘
                        │ HTTP / SSE
 ┌──────────────────────▼──────────────────────────────┐
 │                   FastAPI Backend                    │
-│   /analyze · /stream · /report · /agents/status      │
+│   /analyze · /analyze/github · /stream · /report · /evals │
 └──────────────────────┬──────────────────────────────┘
                        │ triggers
 ┌──────────────────────▼──────────────────────────────┐
@@ -49,13 +49,13 @@ Secondary goal: demonstrate measurable cost and latency savings from LLM respons
 │  All agents share a SecurityState object             │
 └──────┬───────────────────────────┬──────────────────┘
        │                           │
-┌──────▼──────┐          ┌────────▼────────┐
-│ Log Sources  │          │  External APIs   │          ┌──────────────────┐
-│ • Synthetic  │          │  • OpenRouter    │◀────────▶│  LLM Cache Layer │
-│ • System     │          │    (gpt-4o)      │          │  (llm_cache.py)  │
-│ • Upload     │          │  • NVD / CVE     │          │  EvalTracker     │
-└─────────────┘          │  • AbuseIPDB     │          └──────────────────┘
-                         └─────────────────┘
+┌──────▼──────┐          ┌────────▼────────┐          ┌──────────────────┐
+│ Log Sources  │          │  External APIs   │◀────────▶│  LLM Cache Layer │
+│ • Synthetic  │          │  • OpenRouter    │          │  (llm_cache.py)  │
+│ • System     │          │  • GitHub API    │          │  session_evals   │
+│ • Upload     │          │  • NVD · AbuseIPDB          └──────────────────┘
+│ • GitHub     │          └─────────────────┘
+└─────────────┘
 ```
 
 ---
@@ -68,11 +68,11 @@ All agents read from and write to a single `SecurityState` TypedDict passed thro
 class SecurityState(TypedDict):
     # Input
     raw_logs: list[str]
-    log_source: str  # "synthetic" | "system" | "upload"
+    log_source: str  # "synthetic" | "system" | "upload" | "github"
     session_id: str
 
     # Agent outputs (populated in sequence)
-    anomalies: list[dict]
+    anomalies: list[dict]       # each includes title + recommendation
     severity_map: dict[str, str]
     cve_matches: list[dict]
     threat_score: int  # 0-100
@@ -82,6 +82,14 @@ class SecurityState(TypedDict):
     runbook_md: str
     compliance_gaps: list[dict]
     compliance_score: int  # 0-100
+
+    # GitHub scan outputs
+    github_repo: str
+    repo_languages: dict[str, float]
+    primary_language: str
+    files_scanned: int
+    code_findings: list[dict]
+    scan_error: str
 ```
 
 ---
@@ -96,7 +104,7 @@ class SecurityState(TypedDict):
 - `detect_anomalies(entries)` — flags SSH brute force, port scans, auth spikes, unusual traffic
 - `classify_severity(event)` — assigns LOW / MEDIUM / HIGH / CRITICAL
 
-**Writes to state:** `anomalies[]`, `severity_map{}`
+**Writes to state:** `anomalies[]` (with human-readable `title` and `recommendation` per type), `severity_map{}`
 
 **Caching note:** This agent does **not** call the LLM directly — it uses deterministic regex tools. No cache needed here.
 
@@ -118,15 +126,18 @@ class SecurityState(TypedDict):
 ---
 
 ### 3. Vulnerability Scanner Agent
-**Role:** Identifies security weaknesses in code, APIs, and infrastructure.
+**Role:** Identifies security weaknesses from log anomalies, HTTP headers (log runs), and GitHub repository code.
 
 **Tools:**
-- `scan_code_snippet(code)` — checks for OWASP Top 10 patterns
-- `check_api_headers(url)` — detects missing security headers (CSP, X-Frame-Options, HSTS)
-- `audit_docker_image(name)` — flags outdated or vulnerable base images
+- `scan_for_owasp(anomalies)` — maps anomaly types to OWASP categories with recommendations
+- `check_api_headers(headers)` — detects missing security headers (skipped for GitHub-only scans)
+- `scan_github_repo_safe(repo_url)` — GitHub REST API static scan via `tools/github_scanner.py`
+  - Up to 60 files; prioritizes `.tf`/`.hcl` in HCL-heavy repos
+  - `CODE_PATTERNS` (secrets, eval, SQLi, XSS, etc.)
+  - `TERRAFORM_PATTERNS` (0.0.0.0/0, public S3, wildcard IAM, encryption off, etc.)
 
-**Reads from state:** `anomalies[]`, `cve_matches[]`
-**Writes to state:** `vulnerabilities[]`, `risk_level`
+**Reads from state:** `anomalies[]`, `github_repo`
+**Writes to state:** `vulnerabilities[]`, `risk_level`, `code_findings[]`, `files_scanned`, `repo_languages`, `primary_language`, `scan_error`
 
 ---
 
@@ -141,7 +152,7 @@ class SecurityState(TypedDict):
 **Reads from state:** `anomalies[]`, `cve_matches[]`, `vulnerabilities[]`, `threat_score`
 **Writes to state:** `action_plan[]`, `runbook_md`
 
-**Caching note:** This agent makes the most expensive LLM call (`openai/gpt-4o` via OpenRouter, ~500–1000 tokens). Identical anomaly/CVE sets across repeated demo runs produce 100% cache hits via `CachingLLMClient`. Cache key is SHA-256 of `(model + messages)`.
+**Caching note:** This agent makes the most expensive LLM call (`openai/gpt-4o` via OpenRouter, ~500–1000 tokens). Identical anomaly/CVE/code-finding sets across repeated demo runs produce 100% cache hits via `CachingLLMClient`. If the LLM is unavailable or returns empty output, `_fallback_action_plan()` builds deterministic steps from anomalies, code findings, vulnerabilities, and CVEs.
 
 ---
 
@@ -153,8 +164,10 @@ class SecurityState(TypedDict):
 - `check_soc2_controls(findings)` — checks against SOC 2 Type II controls
 - `generate_compliance_report()` — produces gap list with control IDs and remediation hints
 
-**Reads from state:** all prior fields
+**Reads from state:** all prior fields including `code_findings[]`
 **Writes to state:** `compliance_gaps[]`, `compliance_score`
+
+**Note:** `map_code_findings_to_compliance()` maps GitHub code findings to NIST gaps in addition to anomaly-based NIST/SOC2 mapping.
 
 **Caching note:** Policy mapping is deterministic (no LLM call). No cache needed.
 
@@ -179,8 +192,10 @@ The cache is keyed on the exact messages array. Any change to the system prompt 
 | `backend/llm_cache.py` | `LLMCache` (LRU dict + TTL), `CacheEntry` dataclass, module-level singleton `get_default_cache()` |
 | `backend/llm_client.py` | `CachingLLMClient` — wraps OpenRouter-backed `openai.OpenAI`, tries cache before calling API, records to `EvalTracker` |
 | `backend/session_events.py` | Per-session thread-safe event queues; agents emit SSE payloads as they run |
+| `backend/session_evals.py` | Per-session eval API (`/evals`); records LLM calls, latency, cache hits per agent |
 | `backend/eval_tracker.py` | `EvalTracker` — records per-call tokens/cost/latency/hit; `print_comparison_table()` |
 | `backend/benchmark.py` | Standalone benchmark script — runs all 5 agent prompts uncached then cached, prints side-by-side comparison |
+| `backend/tools/github_scanner.py` | GitHub REST API repo scanner with Terraform/IaC pattern rules |
 
 ---
 
@@ -249,9 +264,12 @@ Each agent wrapper:
 |----------|--------|-------------|
 | `/analyze` | POST | Start analysis asynchronously. Body: `{ "source": "synthetic" \| "system" }`. Returns `{ "session_id" }` immediately. |
 | `/analyze/upload` | POST | Start analysis from uploaded `.log`/`.txt` file (multipart). Returns `{ "session_id" }`. |
+| `/analyze/github` | POST | Scan a GitHub repo. Body: `{ "repo_url", "include_logs"?: bool, "log_source"?: "synthetic" \| "system" }`. Returns `{ session_id, github_repo, ... }`. |
 | `/stream/{session_id}` | GET | SSE stream. Emits `running` / `done` / `error` events **as each agent executes**. |
 | `/report/{session_id}` | GET | Full JSON report after analysis completes. Returns `404` while still running. |
 | `/agents/status/{session_id}` | GET | Per-agent status derived from latest emitted events (`pending` / `running` / `done` / `error`). |
+| `/evals` | GET | List eval summaries for all completed sessions. |
+| `/evals/{session_id}` | GET | Detailed per-agent eval metrics (latency, tokens, cost, cache hits). |
 
 **SSE event format:**
 ```json
@@ -270,13 +288,14 @@ Terminal event when the pipeline finishes:
 
 ---
 
-## Log Sources
+## Log & Code Sources
 
-Three modes selectable from the dashboard:
+Four modes selectable from the dashboard:
 
-1. **Synthetic** — pre-generated sample logs bundled with the app (SSH brute force, port scan, auth failures). Always available, ideal for demos.
-2. **System** — reads from `/var/log/auth.log`, `/var/log/syslog`, and Docker container logs on the host machine.
+1. **Synthetic** — pre-generated sample logs bundled with the app (SSH brute force, port scan, path traversal, sudo failure). Always available, ideal for demos.
+2. **System** — reads from `/var/log/auth.log`, `/var/log/syslog`, `/var/log/system.log`, `/var/log/secure.log`. Falls back to synthetic logs if none are readable (common on macOS).
 3. **Upload** — user uploads a `.log` or `.txt` file via the dashboard. Accepted as multipart form data at `POST /analyze/upload`.
+4. **GitHub Repo** — static code scan via `POST /analyze/github`. Accepts full URL or `owner/repo`. Optional checkbox to combine with synthetic/system log analysis. Requires `GITHUB_TOKEN` for reliable API rate limits.
 
 ---
 
@@ -284,14 +303,19 @@ Three modes selectable from the dashboard:
 
 **Stack:** React + Vite + TailwindCSS, dark theme.
 
-**Sections:**
-1. **Nav bar** — app name, Dashboard / Reports / Settings tabs
-2. **Log source selector** — Synthetic / System / Upload buttons + "Run Analysis" trigger
-3. **Metric cards (5)** — Critical Threats · Warnings · Agents Active · Compliance Score · Risk Level. Update live via SSE.
-4. **Agent activity feed** — one line per agent as it completes, color-coded by agent
-5. **Incident report panel** — action plan steps + compliance gaps + Download button
+**Tabs:** Dashboard · Evals
 
-**Real-time updates:** After `POST /analyze` returns, the dashboard opens `GET /stream/{session_id}` and subscribes before the pipeline finishes. Each agent `running` / `done` event updates the activity feed; metric cards refresh after `pipeline` `done` via `GET /report/{session_id}`.
+**Dashboard sections:**
+1. **Nav bar** — app name, Dashboard / Evals tabs
+2. **Log source selector** — Synthetic / System / Upload / **GitHub Repo** + Run Analysis
+3. **Metric cards (5)** — context-aware: log runs show Critical Threats / Compliance Score; GitHub runs show Critical Code Issues / Files Scanned / Primary Language
+4. **Agent Pipeline** — five animated status boxes (gray pending → blue running → green complete → red failed)
+5. **Incident report panel** — action plan + compliance gaps + JSON download
+6. **Detected Threats & Remediation** — unified findings panel with severity-colored cards and **Fix:** recommendations for log anomalies and GitHub code findings
+
+**Evals tab:** Session list with expandable per-agent latency, token usage, cost, and cache hit metrics from `session_evals.py`.
+
+**Real-time updates:** After `POST /analyze*` returns, the dashboard opens `GET /stream/{session_id}`. Agent boxes update on SSE events; full report loads after `pipeline` `done`.
 
 ---
 
@@ -319,13 +343,18 @@ c7-hackathon/
 │   ├── eval_tracker.py          # Per-call token/cost/latency tracking
 │   ├── benchmark.py             # Cached vs uncached eval benchmark
 │   ├── session_events.py        # Per-session queues for live SSE
+│   ├── session_evals.py         # Per-session eval metrics + /evals API
 │   ├── agents/
 │   │   ├── log_monitor.py
 │   │   ├── threat_intel.py
 │   │   ├── vuln_scanner.py
-│   │   ├── incident_response.py  # Uses CachingLLMClient
+│   │   ├── incident_response.py  # Uses CachingLLMClient + fallback action plan
 │   │   └── policy_checker.py
-│   ├── tools/                   # Tool implementations (NVD, AbuseIPDB, etc.)
+│   ├── tools/
+│   │   ├── log_parser.py        # Anomaly detection + title/recommendation enrichment
+│   │   ├── github_scanner.py    # GitHub API + Terraform/IaC patterns
+│   │   ├── nvd_api.py
+│   │   └── abuseipdb.py
 │   ├── data/
 │   │   └── synthetic_logs.json  # Sample logs for demo mode
 │   └── requirements.txt
@@ -334,12 +363,15 @@ c7-hackathon/
 │   │   ├── App.tsx
 │   │   ├── components/
 │   │   │   ├── MetricCard.tsx
-│   │   │   ├── AgentFeed.tsx
+│   │   │   ├── AgentFeed.tsx           # Animated agent pipeline boxes
+│   │   │   ├── ThreatFindingsPanel.tsx # Issues + Fix recommendations
 │   │   │   ├── IncidentReport.tsx
-│   │   │   └── LogSourceSelector.tsx
+│   │   │   ├── LogSourceSelector.tsx   # Includes GitHub repo mode
+│   │   │   └── EvalsTab.tsx
 │   │   └── hooks/
 │   │       └── useSSE.ts        # SSE subscription hook
 │   └── package.json
+├── README.md
 └── docs/
     ├── architecture.md
     ├── architecture.html
@@ -353,16 +385,18 @@ c7-hackathon/
 ## Error Handling
 
 - If an external API (NVD, AbuseIPDB) fails, the agent logs a warning and continues with partial results — it does not block the pipeline.
-- If OpenRouter returns an error, the Incident Response agent retries once then emits an SSE `error` event for that agent. Downstream agents still run with partial findings.
+- If OpenRouter returns an error, the Incident Response agent falls back to `_fallback_action_plan()` (deterministic steps from anomalies, code findings, and vulnerabilities) and still completes the pipeline.
+- GitHub scan failures (404, rate limit) set `scan_error` in state; the dashboard displays the error in the Threats panel.
 - Uploaded files are validated for size (max 10MB) and extension (`.log`, `.txt`) before analysis starts.
 
 ---
 
 ## Testing Strategy
 
-- **Unit tests** — each agent function tested with fixture log data
+- **Unit tests** — each agent function tested with fixture log data; Terraform pattern tests in `test_github_scanner.py`
 - **Integration test** — full LangGraph graph run with synthetic logs, assert all state fields populated
-- **API tests** — FastAPI TestClient for `/analyze`, `/report` endpoints
+- **API tests** — FastAPI TestClient for `/analyze`, `/report`, `/analyze/github` endpoints
 - **Demo smoke test** — run synthetic mode end-to-end, verify SSE stream emits 5 agent events and dashboard metrics update
 - **Cache unit tests** — `test_llm_cache.py`: verify LRU eviction, TTL expiry, key collision, hit/miss counting
-- **Eval benchmark** — `benchmark.py --dry-run`: assert cached run has 100% hit rate, zero cost, and latency < 10 ms/call; assert uncached run records non-zero tokens and cost for every call
+- **Eval benchmark** — `benchmark.py --dry-run`: assert cached run has 100% hit rate, zero cost, and latency < 10 ms/call
+- **Session evals** — `test_evals.py`: verify `/evals` API records per-agent metrics

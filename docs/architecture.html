@@ -8,7 +8,7 @@
     <div style="display:inline-block;background:#1f2d3d;border:1px solid #3b82f6;border-radius:8px;padding:10px 32px;color:#60a5fa;font-weight:bold">
       🖥️ React Dashboard (Vite + TailwindCSS)
     </div>
-    <div style="color:#4a5568;font-size:10px;margin-top:4px">Metrics cards · Agent feed · Log source selector · Incident reports</div>
+    <div style="color:#4a5568;font-size:10px;margin-top:4px">Metrics · Agent pipeline · Threats &amp; remediation · Evals</div>
   </div>
 
   <!-- Arrow down -->
@@ -19,7 +19,7 @@
     <div style="display:inline-block;background:#1a2744;border:1px solid #6366f1;border-radius:8px;padding:10px 32px;color:#a5b4fc;font-weight:bold">
       ⚡ FastAPI Backend
     </div>
-    <div style="color:#4a5568;font-size:10px;margin-top:4px">/analyze · /stream · /report · /agents/status</div>
+    <div style="color:#4a5568;font-size:10px;margin-top:4px">/analyze · /analyze/github · /stream · /report · /evals</div>
   </div>
 
   <!-- Arrow down -->
@@ -46,7 +46,7 @@
       <div style="background:#1a1a2e;border:1px solid #8b5cf6;border-radius:6px;padding:8px 10px;text-align:center;min-width:90px">
         <div style="color:#8b5cf6;font-size:16px">🛡️</div>
         <div style="color:#8b5cf6;font-size:10px;font-weight:bold">Vuln Scanner</div>
-        <div style="color:#4a5568;font-size:9px">code · API · Docker</div>
+        <div style="color:#4a5568;font-size:9px">OWASP · GitHub · headers</div>
       </div>
       <div style="color:#f59e0b">→</div>
       <div style="background:#2a1f0a;border:1px solid #f59e0b;border-radius:6px;padding:8px 10px;text-align:center;min-width:90px">
@@ -69,23 +69,27 @@
   </div>
 
   <!-- Data sources + OpenAI row -->
-  <div style="display:flex;gap:12px;justify-content:center">
-    <div style="background:#111827;border:1px solid #374151;border-radius:8px;padding:10px 14px;text-align:center;flex:1;max-width:180px">
-      <div style="color:#9ca3af;font-size:11px;font-weight:bold">📂 Log Sources</div>
-      <div style="color:#4a5568;font-size:10px;margin-top:4px">Synthetic · System · Upload</div>
+  <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+    <div style="background:#111827;border:1px solid #374151;border-radius:8px;padding:10px 14px;text-align:center;flex:1;max-width:160px">
+      <div style="color:#9ca3af;font-size:11px;font-weight:bold">📂 Input Sources</div>
+      <div style="color:#4a5568;font-size:10px;margin-top:4px">Synthetic · System · Upload · GitHub</div>
     </div>
-    <div style="background:#111827;border:1px solid #374151;border-radius:8px;padding:10px 14px;text-align:center;flex:1;max-width:180px">
-      <div style="color:#9ca3af;font-size:11px;font-weight:bold">🧠 OpenRouter (gpt-4o)</div>
-      <div style="color:#4a5568;font-size:10px;margin-top:4px">Agent reasoning · Tool calls</div>
+    <div style="background:#111827;border:1px solid #374151;border-radius:8px;padding:10px 14px;text-align:center;flex:1;max-width:160px">
+      <div style="color:#9ca3af;font-size:11px;font-weight:bold">🧠 OpenRouter + Cache</div>
+      <div style="color:#4a5568;font-size:10px;margin-top:4px">gpt-4o · LRU SHA-256 cache</div>
     </div>
-    <div style="background:#111827;border:1px solid #374151;border-radius:8px;padding:10px 14px;text-align:center;flex:1;max-width:180px">
+    <div style="background:#111827;border:1px solid #374151;border-radius:8px;padding:10px 14px;text-align:center;flex:1;max-width:160px">
       <div style="color:#9ca3af;font-size:11px;font-weight:bold">🌐 External APIs</div>
-      <div style="color:#4a5568;font-size:10px;margin-top:4px">NVD · CVE · NIST feeds</div>
+      <div style="color:#4a5568;font-size:10px;margin-top:4px">GitHub · NVD · AbuseIPDB</div>
+    </div>
+    <div style="background:#111827;border:1px solid #374151;border-radius:8px;padding:10px 14px;text-align:center;flex:1;max-width:160px">
+      <div style="color:#9ca3af;font-size:11px;font-weight:bold">📊 Session Evals</div>
+      <div style="color:#4a5568;font-size:10px;margin-top:4px">Latency · tokens · cache hits</div>
     </div>
   </div>
 
 </div>
 
 <div style="margin-top:20px;padding:14px;background:#1a2030;border-radius:8px;border-left:3px solid #3b82f6">
-  <p style="color:#94a3b8;margin:0;font-size:13px">Does this architecture look right? Reply in the terminal to confirm or request changes.</p>
+  <p style="color:#94a3b8;margin:0;font-size:13px">See <code>docs/architecture.md</code> and <code>README.md</code> for full details including GitHub scanning, LLM caching, and UI components.</p>
 </div>

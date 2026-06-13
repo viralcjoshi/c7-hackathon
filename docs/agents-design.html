@@ -19,12 +19,12 @@
       <div style="flex:1;min-width:150px">
         <div style="color:#4a5568;font-size:10px;margin-bottom:4px">DETECTS</div>
         <div style="color:#e6edf3">SSH brute force, port scans</div>
-        <div style="color:#e6edf3">Failed auth spikes</div>
-        <div style="color:#e6edf3">Unusual traffic patterns</div>
+        <div style="color:#e6edf3">Path traversal, sudo failures</div>
+        <div style="color:#e6edf3">Enriched with title + recommendation</div>
       </div>
       <div style="flex:1;min-width:150px">
         <div style="color:#4a5568;font-size:10px;margin-bottom:4px">OUTPUT → STATE</div>
-        <div style="color:#22c55e">anomalies[], severity_map{}</div>
+        <div style="color:#22c55e">anomalies[] (title, recommendation), severity_map{}</div>
       </div>
     </div>
   </div>
@@ -64,19 +64,20 @@
     <div style="display:flex;gap:16px;flex-wrap:wrap">
       <div style="flex:1;min-width:150px">
         <div style="color:#4a5568;font-size:10px;margin-bottom:4px">TOOLS</div>
-        <div style="color:#e6edf3">scan_code_snippet(code)</div>
-        <div style="color:#e6edf3">check_api_headers(url)</div>
-        <div style="color:#e6edf3">audit_docker_image(name)</div>
+        <div style="color:#e6edf3">scan_for_owasp(anomalies)</div>
+        <div style="color:#e6edf3">check_api_headers() — log runs only</div>
+        <div style="color:#e6edf3">scan_github_repo_safe(url)</div>
       </div>
       <div style="flex:1;min-width:150px">
         <div style="color:#4a5568;font-size:10px;margin-bottom:4px">CHECKS</div>
-        <div style="color:#e6edf3">OWASP Top 10 patterns</div>
+        <div style="color:#e6edf3">OWASP Top 10 · Terraform/IaC patterns</div>
         <div style="color:#e6edf3">Missing security headers</div>
-        <div style="color:#e6edf3">Outdated base images</div>
+        <div style="color:#e6edf3">Hardcoded secrets, open CIDRs, public S3</div>
       </div>
       <div style="flex:1;min-width:150px">
         <div style="color:#4a5568;font-size:10px;margin-bottom:4px">OUTPUT → STATE</div>
-        <div style="color:#8b5cf6">vulnerabilities[], risk_level</div>
+        <div style="color:#8b5cf6">vulnerabilities[], code_findings[]</div>
+        <div style="color:#8b5cf6">risk_level, files_scanned, scan_error</div>
       </div>
     </div>
   </div>
@@ -90,13 +91,12 @@
     <div style="display:flex;gap:16px;flex-wrap:wrap">
       <div style="flex:1;min-width:150px">
         <div style="color:#4a5568;font-size:10px;margin-bottom:4px">TOOLS</div>
-        <div style="color:#e6edf3">generate_action_plan(findings)</div>
-        <div style="color:#e6edf3">prioritize_threats(list)</div>
-        <div style="color:#e6edf3">draft_runbook(incident)</div>
+        <div style="color:#e6edf3">call_openai via CachingLLMClient</div>
+        <div style="color:#e6edf3">_fallback_action_plan()</div>
       </div>
       <div style="flex:1;min-width:150px">
         <div style="color:#4a5568;font-size:10px;margin-bottom:4px">READS FROM STATE</div>
-        <div style="color:#e6edf3">anomalies, cve_matches</div>
+        <div style="color:#e6edf3">anomalies, cve_matches, code_findings</div>
         <div style="color:#e6edf3">vulnerabilities, threat_score</div>
       </div>
       <div style="flex:1;min-width:150px">
@@ -115,15 +115,13 @@
     <div style="display:flex;gap:16px;flex-wrap:wrap">
       <div style="flex:1;min-width:150px">
         <div style="color:#4a5568;font-size:10px;margin-bottom:4px">TOOLS</div>
-        <div style="color:#e6edf3">check_nist_compliance(findings)</div>
-        <div style="color:#e6edf3">check_soc2_controls(findings)</div>
-        <div style="color:#e6edf3">generate_compliance_report()</div>
+        <div style="color:#e6edf3">map_to_nist · map_to_soc2</div>
+        <div style="color:#e6edf3">map_code_findings_to_compliance()</div>
       </div>
       <div style="flex:1;min-width:150px">
         <div style="color:#4a5568;font-size:10px;margin-bottom:4px">STANDARDS</div>
-        <div style="color:#e6edf3">NIST CSF 2.0</div>
+        <div style="color:#e6edf3">NIST CSF 2.0 (anomalies + code)</div>
         <div style="color:#e6edf3">SOC 2 Type II controls</div>
-        <div style="color:#e6edf3">ISO 27001 basics</div>
       </div>
       <div style="flex:1;min-width:150px">
         <div style="color:#4a5568;font-size:10px;margin-bottom:4px">OUTPUT → STATE</div>
@@ -135,5 +133,5 @@
 </div>
 
 <div style="margin-top:16px;padding:12px;background:#1a2030;border-radius:8px;border-left:3px solid #3b82f6">
-  <p style="color:#94a3b8;margin:0;font-size:12px">Does each agent's scope feel right? Any tools to add or remove? Reply in the terminal.</p>
+  <p style="color:#94a3b8;margin:0;font-size:12px">Full agent details in <code>docs/superpowers/specs/2026-06-12-cybersentinel-ai-design.md</code>.</p>
 </div>
